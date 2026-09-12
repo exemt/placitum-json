@@ -650,7 +650,7 @@ inspectors/json/
 ├── internal/desired/  поколение из KV, раскладка на диск
 ├── internal/audit/    событие kind=inspector
 ├── internal/queue/    очередь и admission control
-├── internal/pulse/    кадр присутствия, internal/flow и internal/host рядом
+├── (pulse, flow, host, logkit, dataset -- из placitum-shared)
 ├── profiles/          default, api, strict, observe, soft, _probe
 └── deploy/            Dockerfile
 ```

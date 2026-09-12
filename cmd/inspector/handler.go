@@ -26,13 +26,13 @@ import (
 	"github.com/exemt/placitum-json/internal/audit"
 	"github.com/exemt/placitum-json/internal/body"
 	"github.com/exemt/placitum-json/internal/config"
-	"github.com/exemt/placitum-json/internal/dataset"
 	"github.com/exemt/placitum-json/internal/decide"
-	"github.com/exemt/placitum-shared/netinfo"
 	"github.com/exemt/placitum-json/internal/protocol"
 	"github.com/exemt/placitum-json/internal/queue"
 	"github.com/exemt/placitum-json/internal/schema"
 	"github.com/exemt/placitum-json/internal/validate"
+	"github.com/exemt/placitum-shared/dataset"
+	"github.com/exemt/placitum-shared/netinfo"
 )
 
 /*

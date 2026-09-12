@@ -3,7 +3,7 @@ module github.com/exemt/placitum-json
 go 1.25.7
 
 require (
-	github.com/exemt/placitum-shared v0.1.0
+	github.com/exemt/placitum-shared v0.3.0
 	github.com/nats-io/nats.go v1.53.1
 	github.com/pb33f/libopenapi v0.38.7
 	github.com/pb33f/libopenapi-validator v0.14.0
