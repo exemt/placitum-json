@@ -1,0 +1,140 @@
+openapi: 3.0.3
+
+# Контракт стенда: то, что описывает эхо-приложение deploy/docker-compose.yml
+# в терминах API. Пути написаны так, как их видит клиент за вычетом префикса
+# маршрута: location /json/ плюс base_path: /json в профиле.
+#
+# Ответы описаны конвертом /echo -- он и приезжает клиенту, потому что
+# proxy_pass ведёт на него. Исключение -- /report: там объявлен ответ, которого
+# приложение не отдаёт, и на нём проверяется фаза ответа.
+
+info:
+  title: WAF stand contract
+  version: "1.0.0"
+  description: Контракт для проверки инспектора json на стенде
+
+paths:
+  /orders:
+    post:
+      summary: Создать заказ
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Order"
+      responses:
+        "200":
+          description: Эхо приложения
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Echo"
+
+  /orders/{id}:
+    get:
+      summary: Прочитать заказ
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        - name: verbose
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Эхо приложения
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Echo"
+
+  /report:
+    get:
+      summary: Отчёт, которого приложение не отдаёт
+      responses:
+        "200":
+          description: Ответ, объявленный не тем, что приходит на самом деле
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [total]
+                additionalProperties: false
+                properties:
+                  total:
+                    type: integer
+
+  /fail:
+    get:
+      summary: Путь, на котором приложение отвечает кодом вне спеки
+      responses:
+        "200":
+          description: Единственный объявленный код
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status:
+                    type: integer
+
+  /healthz:
+    get:
+      summary: Живость
+      responses:
+        "200":
+          description: Живо
+
+components:
+  schemas:
+    Order:
+      type: object
+      required: [id, item]
+      additionalProperties: false
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        item:
+          type: string
+          minLength: 1
+        qty:
+          type: integer
+          minimum: 1
+          maximum: 1000
+
+    Echo:
+      type: object
+      required: [method, url, headers, body]
+      properties:
+        method:
+          type: string
+        url:
+          type: string
+        headers:
+          type: array
+          items:
+            type: array
+            items:
+              type: string
+        body:
+          type: object
+          required: [base64, bytes, truncated]
+          properties:
+            base64:
+              type: string
+            bytes:
+              type: integer
+            truncated:
+              type: boolean
+        remote_addr:
+          type: string
+        received_at:
+          type: string

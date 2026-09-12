@@ -1,0 +1,57 @@
+# Белый список: за пределами контракта на маршруте не живёт ничего.
+#
+# Отличие от api ровно в двух местах: путь, которого нет в спеке, -- отказ, и
+# ответ приложения, не совпавший с объявленным, тоже отказ. Второе включают
+# осознанно: расхождение спеки с приложением превращается в 502 клиенту, и
+# доводить профиль до этого состояния можно только после наблюдения.
+
+mode: enforce
+description: "Строгий контракт: путь вне спеки и ответ не по спеке -- отказ"
+
+schema:
+  kind: openapi
+  source: stand
+  base_path: /json-strict
+
+request:
+  enabled: true
+  checks:
+    body: true
+    query: true
+    path_params: true
+    headers: false
+  policy:
+    invalid:           { action: deny }
+    unparsable:        { action: deny }
+    truncated:         { action: deny }
+    unknown_operation: { action: deny }
+    content_type:      { action: deny }
+    unavailable:       { action: deny }
+  deny_response: json_invalid
+
+response:
+  enabled: true
+  checks:
+    body: true
+    status: true
+    content_type: true
+  policy:
+    invalid:           { action: deny }
+    unparsable:        { action: deny }
+    truncated:         { action: allow }
+    unknown_operation: { action: allow }
+    content_type:      { action: allow }
+    unavailable:       { action: allow }
+    status:            { action: deny }
+  only_types: ["application/json", "+json"]
+  deny_response: json_response_invalid
+
+limits:
+  max_body: 1m
+  max_depth: 64
+  max_errors: 20
+  cache: 4096
+
+audit:
+  values: off
+  paths: true

@@ -1,0 +1,31 @@
+# Профиль пробы. Зарезервированное имя: сообщение с ним обязано получить deny.
+#
+# Проба идёт тем же путём, что и настоящая инспекция, и в этом её смысл как
+# healthcheck: вердикт в ответе означает, что живы соединение с шиной,
+# подписка, загруженные профили и пул воркеров.
+#
+# Как это устроено: у профиля нет основной схемы, есть одна привязка на
+# /_probe/valid. Любой другой путь ни с чем не связан -- исход «контрактом не
+# описан», политика deny. Тела и обменника для этого не нужно, поэтому проба
+# работает и там, где Redis инспектору не дали.
+
+mode: enforce
+description: "Проба: любой путь вне /_probe/valid обязан получить deny"
+
+schema:
+  kind: jsonschema
+  source: ""
+
+request:
+  enabled: true
+  policy:
+    unknown_operation: { action: deny }
+  deny_response: json_invalid
+
+response:
+  enabled: false
+
+bindings:
+  - path: /_probe/valid
+    match: prefix
+    schema: probe

@@ -1,0 +1,61 @@
+# Гейт контракта на фазе запроса.
+#
+# Тело, параметры пути и строки запроса проверяются; несовпадение со схемой --
+# отказ, потому что это двоичный факт, а не оценка. Путь, которого нет в спеке,
+# пропускается: маршрут почти всегда шире контракта -- на нём живут /healthz,
+# статика и служебные адреса. Белый список путей -- это профиль strict.
+#
+# Счёт стоит у каждого исхода свой: расхождение ответа со спекой весит 40, а
+# необъявленный код ответа -- 20. Это разные новости, и складываться в общую
+# сумму они обязаны по-разному.
+
+mode: enforce
+description: "Контракт API: гейт на запросе, счёт на ответе"
+
+schema:
+  kind: openapi
+  source: stand
+  base_path: /json
+
+request:
+  enabled: true
+  checks:
+    body: true
+    query: true
+    path_params: true
+    headers: false
+  policy:
+    invalid:           { action: deny }
+    unparsable:        { action: deny }
+    truncated:         { action: deny }
+    unknown_operation: { action: allow }
+    content_type:      { action: allow }
+    unavailable:       { action: allow }
+  deny_response: json_invalid
+
+response:
+  enabled: true
+  checks:
+    body: true
+    status: true
+    content_type: true
+  policy:
+    invalid:           { action: score, score: 40 }
+    unparsable:        { action: allow }
+    truncated:         { action: allow }
+    unknown_operation: { action: allow }
+    content_type:      { action: allow }
+    unavailable:       { action: allow }
+    status:            { action: score, score: 20 }
+  only_types: ["application/json", "+json"]
+  deny_response: json_response_invalid
+
+limits:
+  max_body: 1m
+  max_depth: 64
+  max_errors: 20
+  cache: 4096
+
+audit:
+  values: off
+  paths: true

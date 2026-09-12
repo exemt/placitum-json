@@ -1,0 +1,57 @@
+# Наблюдение: всё то же самое, модулю всегда allow с кодом JSON_OBSERVE.
+#
+# Единственный способ увидеть, какая доля живого трафика контрактом не описана,
+# не заперев при этом клиентов. В аудите остаётся passive: true и
+# would_verdict/would_code -- решение, которое принял бы enforce. Инициаторы
+# (просьбы соседям, записи в наборы) стреляют по нему как в enforce.
+
+mode: observe
+description: "Наблюдение: считаем вердикт, отдаём allow"
+
+schema:
+  kind: openapi
+  source: stand
+  base_path: /json-observe
+
+request:
+  enabled: true
+  checks:
+    body: true
+    query: true
+    path_params: true
+    headers: false
+  policy:
+    invalid:           { action: deny }
+    unparsable:        { action: deny }
+    truncated:         { action: deny }
+    unknown_operation: { action: deny }
+    content_type:      { action: allow }
+    unavailable:       { action: allow }
+  deny_response: json_invalid
+
+response:
+  enabled: true
+  checks:
+    body: true
+    status: true
+    content_type: true
+  policy:
+    invalid:           { action: deny }
+    unparsable:        { action: allow }
+    truncated:         { action: allow }
+    unknown_operation: { action: allow }
+    content_type:      { action: allow }
+    unavailable:       { action: allow }
+    status:            { action: deny }
+  only_types: ["application/json", "+json"]
+  deny_response: json_response_invalid
+
+limits:
+  max_body: 1m
+  max_depth: 64
+  max_errors: 20
+  cache: 4096
+
+audit:
+  values: off
+  paths: true

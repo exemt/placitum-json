@@ -1,0 +1,47 @@
+# Мягкий профиль: непроверяемое проходит.
+#
+# Отличие от api -- в политике на усечённое тело. Здесь маршрут возит крупные
+# документы законно, инспектор стоит ради типовых ошибок, а не ради гейта, и
+# тело, не влезшее в waf_body_limit, пропускается с пометкой в аудите. По ней и
+# видно, какая доля трафика проверку не проходила вовсе.
+#
+# Счёт у исходов разный намеренно: расхождение со схемой весит 60, а вызов,
+# которого нет в контракте, -- 20: второе чаще говорит о том, что спека
+# отстала, а не о том, что клиент шалит.
+
+mode: enforce
+description: "Мягкий контракт: усечённое тело пропускаем, расхождение скорим"
+
+schema:
+  kind: openapi
+  source: stand
+  base_path: /json-soft
+
+request:
+  enabled: true
+  checks:
+    body: true
+    query: true
+    path_params: true
+    headers: false
+  policy:
+    invalid:           { action: score, score: 60 }
+    unparsable:        { action: allow }
+    truncated:         { action: allow }
+    unknown_operation: { action: score, score: 20 }
+    content_type:      { action: allow }
+    unavailable:       { action: allow }
+  deny_response: json_invalid
+
+response:
+  enabled: false
+
+limits:
+  max_body: 1m
+  max_depth: 64
+  max_errors: 20
+  cache: 4096
+
+audit:
+  values: off
+  paths: true

@@ -1,0 +1,11 @@
+# Контекст сборки. Профили НЕ исключены: сборка поднимает их в тестах, а
+# образ везёт их как умолчание. Тесты (*_test.go) тоже нужны сборке.
+
+README.md
+INSTALL.md
+LICENSE.md
+LICENSE.ru.md
+docs/
+.github/
+.gitignore
+.gitattributes

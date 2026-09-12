@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "join a room",
+  "type": "object",
+  "required": ["type", "room"],
+  "additionalProperties": false,
+  "properties": {
+    "type": { "const": "join" },
+    "room": { "type": "string", "minLength": 1, "maxLength": 64 }
+  }
+}

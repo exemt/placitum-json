@@ -1,0 +1,62 @@
+# Контракт сообщений сокета: кадры от клиента по схемам типов сообщений.
+#
+# Профиль стенда nginx/tests/ws: чат с двумя типами сообщений, msg и join.
+# Тип берётся из поля type самого сообщения, и у каждого своя схема. Всё,
+# что под схему не подходит, контрактом не описано, и на стороне клиента это
+# отказ: Close 1008 из записи ws_policy до того, как кадр увидит приложение.
+#
+# Фаз запроса и ответа у профиля нет: рукопожатие -- обычный GET без тела, а
+# ответ на него -- 101 без тела.
+
+mode: enforce
+description: "Сообщения чата по схемам типов: msg и join"
+
+schema:
+  kind: jsonschema
+  source: ""
+
+request:
+  enabled: false
+
+response:
+  enabled: false
+
+frame:
+  enabled: true
+  bindings:
+    - path: /ws/
+      match: prefix
+      direction: c2s
+      discriminator: { pointer: /type, value: msg }
+      schema: chat_msg
+    - path: /ws/
+      match: prefix
+      direction: c2s
+      discriminator: { pointer: /type, value: join }
+      schema: chat_join
+  c2s:
+    checks: { body: true }
+    policy:
+      invalid:           { action: deny }
+      unparsable:        { action: deny }
+      truncated:         { action: deny }
+      unknown_operation: { action: deny }
+      opcode:            { action: deny }
+      unavailable:       { action: allow }
+    deny_response: ws_policy
+  s2c:
+    checks: { body: true }
+    policy:
+      invalid:           { action: score, score: 40 }
+      unparsable:        { action: allow }
+      truncated:         { action: allow }
+      unknown_operation: { action: allow }
+      opcode:            { action: allow }
+      unavailable:       { action: allow }
+    deny_response: ws_policy
+
+limits:
+  max_body: 1m
+  max_depth: 64
+  max_errors: 20
+  cache: 4096
