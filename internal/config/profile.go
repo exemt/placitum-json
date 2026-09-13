@@ -25,6 +25,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/exemt/placitum-json/internal/overload"
 	"github.com/exemt/placitum-json/internal/protocol"
 )
 
@@ -670,7 +671,8 @@ func checkPhaseAsk(do, phase, apply string) error {
  */
 type Outcome struct {
 	On string `yaml:"on"`
-	// At -- порог сравнения счёта; только при On == score, и там обязателен.
+	// At -- порог сравнения счёта; при On == score обязателен. У overload --
+	// заполнение очереди в процентах, не назван -- край (internal/overload).
 	At *int `yaml:"at"`
 	// Below -- сравнивать в другую сторону: score < at вместо score >= at.
 	Below bool `yaml:"below"`
@@ -791,6 +793,19 @@ func validateOutcome(section string, i int, o Outcome) error {
 		// Сравнение одно: «ровно at» и «ниже at» разом не бывают.
 		if o.Below && o.Eq {
 			return fmt.Errorf("%s: below and eq are mutually exclusive", where)
+		}
+
+	case OnOverload:
+		if section != "request" {
+			return fmt.Errorf("%s: on: %s is only for the request section", where, OnOverload)
+		}
+
+		if err := overload.Check(o.At); err != nil {
+			return fmt.Errorf("%s: %w", where, err)
+		}
+
+		if o.Below || o.Eq {
+			return fmt.Errorf("%s: below and eq are only for on: score", where)
 		}
 
 	default:
@@ -1653,3 +1668,7 @@ func (ph *ResponsePhase) TypeAllowed(contentType string) bool {
 
 	return false
 }
+
+// OnOverload -- инспектор перегружен: порог at -- заполнение очереди в процентах
+// (internal/overload). Только в секции запроса.
+const OnOverload = overload.On

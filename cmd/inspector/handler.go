@@ -152,15 +152,19 @@ func (h *handler) shed(t *queue.Task, budget time.Duration, shed string) {
 	 * waf_exception класса inspector, но словами инспектора и мимо маршрута.
 	 */
 	reply := protocol.ShedReply(t.Req, shed)
-
-	h.log.Warn("shed", "rid", t.Req.RID, "reason", shed, "budget_ms", budget.Milliseconds())
-
-	h.send(t.Reply, reply, t.Req, audit.Details{
+	det := audit.Details{
 		Engine: map[string]any{
 			"shed":      shed,
 			"budget_ms": float64(budget.Microseconds()) / 1000,
 		},
-	})
+	}
+
+	fired := h.overloadOnShed(t, shed, reply, det)
+
+	h.log.Warn("shed", "rid", t.Req.RID, "reason", shed, "budget_ms", budget.Milliseconds(),
+		"asks", len(fired.Actions), "lists", len(fired.Bans))
+
+	h.send(t.Reply, reply, t.Req, det)
 }
 
 func (h *handler) inspect(t *queue.Task, budget time.Duration) (*protocol.Reply, audit.Details) {
@@ -345,6 +349,16 @@ func (h *handler) inspect(t *queue.Task, budget time.Duration) (*protocol.Reply,
 	 * решение отдаётся сюда уже с коэффициентом соседа.
 	 */
 	fired := decide.Fire(phasePolicy(p, req), effective(d, scored), req.Conn.ClientIP)
+
+	// Строки перегрузки -- только на фазе запроса: запрос встал в очередь не
+	// ниже их порога.
+	if req.Phase == protocol.PhaseRequest {
+		more := decide.FireOverload(decide.RequestPhase(p).Outcomes, t.Fill, false,
+			req.Conn.ClientIP, queue.ReasonQueueLimit)
+		fired.Actions = append(fired.Actions, more.Actions...)
+		fired.Bans = append(fired.Bans, more.Bans...)
+		fired.Names = append(fired.Names, more.Names...)
+	}
 
 	if len(fired.Actions) != 0 {
 		reply.Actions = fired.Actions
@@ -623,4 +637,43 @@ func (h *handler) publish(ctx context.Context, bans []decide.Ban, req *protocol.
 	}
 
 	return writeLists(ctx, h.resolver, h.lists, h.log, req.RID, bans)
+}
+
+/*
+ * overloadOnShed -- строки перегрузки на снятом по полной очереди запросе:
+ * срабатывают все, каков бы ни был порог, и только на фазе запроса
+ * (internal/overload). Действия едут рядом с error -- модуль исполнит свои
+ * глаголы, -- записи в наборы публикует сам инспектор. Бюджета у снятого
+ * запроса нет: кодер ограничен своим таймаутом. Выключенный профиль молчит.
+ */
+func (h *handler) overloadOnShed(t *queue.Task, shed string, reply *protocol.Reply,
+	det audit.Details) decide.Fired {
+
+	if shed != queue.ReasonQueueLimit || t.Req.Phase != protocol.PhaseRequest {
+		return decide.Fired{}
+	}
+
+	p, ok := h.profile(h.store.Current(), t.Req)
+	if !ok || p.Mode == config.ModeOff {
+		return decide.Fired{}
+	}
+
+	fired := decide.FireOverload(decide.RequestPhase(p).Outcomes, t.Fill, true, t.Req.Conn.ClientIP, shed)
+
+	if len(fired.Actions) != 0 {
+		reply.Actions = fired.Actions
+	}
+
+	if len(fired.Names) != 0 {
+		det.Engine["outcomes"] = fired.Names
+	}
+
+	if err := h.publish(context.Background(), fired.Bans, t.Req); err != nil {
+		h.log.Error("geo unavailable for a list write", "rid", t.Req.RID,
+			"profile", p.Name, "error", err.Error())
+
+		det.Engine["geo"] = err.Error()
+	}
+
+	return fired
 }

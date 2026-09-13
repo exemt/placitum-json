@@ -16,6 +16,7 @@ package decide
 
 import (
 	"github.com/exemt/placitum-json/internal/config"
+	"github.com/exemt/placitum-json/internal/overload"
 	"github.com/exemt/placitum-json/internal/protocol"
 	"github.com/exemt/placitum-json/internal/schema"
 )
@@ -393,4 +394,44 @@ func outcomeName(o config.Outcome) string {
 	}
 
 	return o.List
+}
+
+/*
+ * FireOverload -- строки перегрузки секции запроса: fill -- заполнение очереди
+ * при постановке запроса, shed -- запрос снят по полной очереди
+ * (internal/overload). code -- повод строки, у которой свой не назван.
+ * Сравнивать с решением нечего: у строки перегрузки его нет.
+ */
+func FireOverload(outcomes []config.Outcome, fill int, shed bool, addr, code string) Fired {
+	var out Fired
+
+	for _, o := range outcomes {
+		if o.On != config.OnOverload || !overload.Fires(overload.At(o.At), fill, shed) {
+			continue
+		}
+
+		if o.Asks() {
+			out.Actions = append(out.Actions, ask(o, code))
+			out.Names = append(out.Names, outcomeName(o))
+
+			continue
+		}
+
+		// Адреса нет -- писать некого; подсеть и систему развернёт обработчик.
+		if addr == "" {
+			continue
+		}
+
+		out.Bans = append(out.Bans, Ban{
+			Dataset: o.List,
+			Write:   o.Subject(),
+			Addr:    addr,
+			TTL:     o.TTL.Seconds(),
+			Reason:  reason(o, code),
+		})
+
+		out.Names = append(out.Names, outcomeName(o))
+	}
+
+	return out
 }
