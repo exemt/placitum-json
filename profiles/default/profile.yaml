@@ -1,0 +1,9 @@
+# Default profile of the image: off.
+#
+# Without a contract from the controller there is nothing to check against. An off profile is more
+# honest than an empty one: the audit shows JSON_PROFILE_OFF, "the route is not checked", instead of
+# silence that is easy to read as "checked and matched". The real default comes as a generation from
+# KV (policy/json) and replaces this directory as a whole.
+
+mode: off
+description: "Empty image profile: the contract comes from the controller"

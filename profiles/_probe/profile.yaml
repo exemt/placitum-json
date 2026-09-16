@@ -1,0 +1,27 @@
+# Probe profile. A reserved name: a message with it must get deny.
+#
+# The probe takes the same path as a real inspection, which is the point of the health check: a
+# verdict means the bus connection, the subscription, the loaded profiles and the worker pool are
+# alive. The profile has no main schema and a single binding on /_probe/valid, so any other path is
+# "not described by the contract" with a deny policy. No body and no exchange are needed.
+
+mode: enforce
+description: "Probe: any path outside /_probe/valid must get deny"
+
+schema:
+  kind: jsonschema
+  source: ""
+
+request:
+  enabled: true
+  policy:
+    unknown_operation: { action: deny }
+  deny_response: json_invalid
+
+response:
+  enabled: false
+
+bindings:
+  - path: /_probe/valid
+    match: prefix
+    schema: probe
