@@ -49,7 +49,7 @@ const SchemaFilePrefix = "schema-"
 var (
 	nameRe   = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]*$`)
 	methodRe = regexp.MustCompile(`^[A-Z]+$`)
-	codeRe   = regexp.MustCompile(`^[A-Za-z0-9_.:-]+$`)
+	codeRe   = regexp.MustCompile(`^[A-Z][A-Z0-9_]{0,63}$`)
 )
 
 type Size int64
@@ -777,12 +777,8 @@ func checkCode(code string) error {
 		return nil
 	}
 
-	if len(code) > 64 {
-		return fmt.Errorf("code is longer than 64 bytes")
-	}
-
 	if !codeRe.MatchString(code) {
-		return fmt.Errorf("bad code %q", code)
+		return fmt.Errorf("code %q is not [A-Z][A-Z0-9_]{0,63}", code)
 	}
 
 	return nil
