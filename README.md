@@ -14,7 +14,7 @@ unverifiable data must not pass, `allow` where large bodies are legitimate.
 ```
 module ──► waf.req.json ──►  json  ──► allow | deny | score
                                │
-                               ├── body and headers: from the exchange by locator
+                               ├── body and headers: from the buffer by locator
                                └── profile: specification, outcome policy, dataset writes
 ```
 
@@ -22,7 +22,7 @@ module ──► waf.req.json ──►  json  ──► allow | deny | score
 
 ```
 cmd/inspector/     bus, waf.req.json, both phases
-cmd/probe/         health check: the _probe profile answers deny without the exchange
+cmd/probe/         health check: the _probe profile answers deny without the buffer
 internal/schema/   OpenAPI and JSON Schema compilation, operation lookup, findings
 internal/validate/ check order: is the body complete? does it parse? does it match?
 internal/decide/   profile policy → verdict, a pure function

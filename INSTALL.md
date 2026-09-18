@@ -11,7 +11,7 @@ configuration. Usually `placitum-core` installs it.
 | Component | Required | Why |
 | --- | --- | --- |
 | NATS | yes | the `waf.req.json` queue, audit, log, profile generations |
-| Exchange Redis | for body checks | body and headers come as a locator and are read from here |
+| Buffer Redis | for body checks | body and headers come as a locator and are read from here |
 | Controller | yes | sends profiles as generations |
 | `keeper` | if a profile writes outcomes to datasets | the write is a request to `waf.sets.<set>.event` |
 | `geo` | if a dataset write uses a subnet or a system | announcements and AS number by address |
@@ -23,7 +23,7 @@ The inspector does not need the internal Redis.
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `NATS_URL` | `nats://127.0.0.1:4222` | bus |
-| `REDIS_URL` | from `inspector.conf` | exchange. Empty starts with a warning and treats **every body** as unavailable; named but not answering stops the start |
+| `REDIS_URL` | from `inspector.conf` | buffer. Empty starts with a warning and treats **every body** as unavailable; named but not answering stops the start |
 | `WAF_JSON_SUBJECT` | `waf.req.json` | subscription |
 | `WAF_JSON_NAME` | `json` | name in the inspector registry and the presence frame |
 | `WAF_JSON_QUEUE` | the name | queue group on the bus |
@@ -68,7 +68,7 @@ NATS would say nothing about any of them.
 docker exec <container> json-probe --quiet --timeout 1s --uri /healthcheck
 ```
 
-A healthy start logs the bus and exchange connections, the loaded profiles and the worker count,
+A healthy start logs the bus and buffer connections, the loaded profiles and the worker count,
 then a presence frame every four seconds.
 
 ## Pitfalls
