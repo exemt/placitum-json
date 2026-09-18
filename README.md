@@ -32,7 +32,7 @@ profiles/          default (off) and _probe
 deploy/            Dockerfile
 ```
 
-Presence frame, machine snapshot, flow counters, log levels and the geo coder client come from
+Presence frame, machine snapshot, flow counters, log levels and the network directory client come from
 [`placitum-shared`](https://github.com/exemt/placitum-shared).
 
 ## Build

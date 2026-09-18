@@ -35,8 +35,8 @@ The inspector does not need the internal Redis.
 | `WAF_JSON_QUEUE_DEPTH`, `WAF_JSON_QUEUE_FULL`, `WAF_JSON_QUEUE_EXPAND` | `256`, `drop`, `off` | queue and overflow behaviour; the same through `inspector.conf` |
 | `WAF_JSON_RESERVE_MS`, `WAF_JSON_MIN_BUDGET_MS` | `2`, `2` | reserve before the wave deadline and the minimum budget below which a check does not start |
 | `WAF_JSON_VERSIONS` | `2` | accepted message schema versions |
-| `WAF_JSON_GEO_ADDR` | empty | geo coder (`host:port`); empty makes subnet and system writes answer with a rejection |
-| `WAF_JSON_GEO_TIMEOUT`, `WAF_JSON_GEO_NEG_MAX` | `500ms`, `0` | coder wait within the message budget and negative cache limit |
+| `WAF_JSON_GEO_ADDR` | empty | network directory (`host:port`); empty makes subnet and system writes answer with a rejection |
+| `WAF_JSON_GEO_TIMEOUT`, `WAF_JSON_GEO_NEG_MAX` | `500ms`, `0` | network directory wait within the message budget and negative cache limit |
 | `WAF_JSON_LOG` | `info` | starting log level; the panel changes it live |
 | `WAF_HEARTBEAT_EVERY` | `4s` | presence frame interval |
 
