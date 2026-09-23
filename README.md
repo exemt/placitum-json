@@ -7,7 +7,7 @@ standalone JSON Schema, as the profile chooses. It works in both phases, and the
 independent: the operation is found by method and path, which come in every message. WebSocket
 messages are checked against schemas as well, in the `frame` section of a profile.
 
-The body must be **complete**. A JSON prefix is never valid, so the inspector does not validate a
+The body must be complete. A JSON prefix is never valid, so the inspector does not validate a
 truncated body at all and follows the profile policy instead: `on_truncated` is `deny` where
 unverifiable data must not pass, `allow` where large bodies are legitimate.
 
@@ -51,8 +51,7 @@ there is nothing to check against until the controller delivers a contract, and 
 health check. Real profiles come from the panel as generations and replace the directory as a
 whole; `_probe` is added back from the image.
 
-A route whose profile is missing gets a denial, not a fallback to `default`: checking against the
-wrong contract is not a milder check, it is a check of the wrong thing.
+A route whose profile is missing is denied; the inspector does not fall back to `default`.
 
 ## License
 
