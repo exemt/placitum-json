@@ -8,8 +8,9 @@ independent: the operation is found by method and path, which come in every mess
 messages are checked against schemas as well, in the `frame` section of a profile.
 
 The body must be complete. A JSON prefix is never valid, so the inspector does not validate a
-truncated body at all and follows the profile policy instead: `on_truncated` is `deny` where
-unverifiable data must not pass, `allow` where large bodies are legitimate.
+truncated body at all and follows the profile policy instead. `policy.truncated` of the request and
+of the response says what to do: `deny` where unverifiable data must not pass, `allow` where large
+bodies are legitimate, or `score`.
 
 ```
 module ──► waf.req.json ──►  json  ──► allow | deny | score
@@ -51,7 +52,8 @@ there is nothing to check against until the controller delivers a contract, and 
 health check. Real profiles come from the panel as generations and replace the directory as a
 whole; `_probe` is added back from the image.
 
-A route whose profile is missing is denied; the inspector does not fall back to `default`.
+A route that names a profile the inspector does not have gets `error` with `JSON_UNKNOWN_PROFILE`,
+and `waf_exception` of the route decides. An empty name means `default`.
 
 ## License
 
